@@ -57,6 +57,16 @@ const CHAT_CHANNEL_META: Record<ChatChannelId, ChannelMeta> = {
     blurb: "very well supported right now.",
     systemImage: "bubble.left.and.bubble.right",
   },
+  bastion: {
+    id: "bastion",
+    label: "Bastion",
+    selectionLabel: "Bastion (Bot API)",
+    detailLabel: "Bastion Bot",
+    docsPath: "/channels/bastion",
+    docsLabel: "bastion",
+    blurb: "self-hosted Bastion chat with bot token + WebSocket.",
+    systemImage: "shield",
+  },
   irc: {
     id: "irc",
     label: "IRC",

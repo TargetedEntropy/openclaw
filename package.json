@@ -205,6 +205,10 @@
       "types": "./dist/plugin-sdk/googlechat.d.ts",
       "default": "./dist/plugin-sdk/googlechat.js"
     },
+    "./plugin-sdk/bastion": {
+      "types": "./dist/plugin-sdk/bastion.d.ts",
+      "default": "./dist/plugin-sdk/bastion.js"
+    },
     "./plugin-sdk/irc": {
       "types": "./dist/plugin-sdk/irc.d.ts",
       "default": "./dist/plugin-sdk/irc.js"

@@ -1,0 +1,9 @@
+{
+  "id": "bastion",
+  "channels": ["bastion"],
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}
