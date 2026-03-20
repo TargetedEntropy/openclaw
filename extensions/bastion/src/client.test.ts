@@ -106,7 +106,7 @@ describe("bastionApiGetSelf", () => {
     expect(self.id).toBe("bot-1");
     expect(self.username).toBe("testbot");
     expect(globalThis.fetch).toHaveBeenCalledWith(
-      "https://bastion.example.com/api/v1/users/@me",
+      "https://bastion.example.com/api/v1/users/me",
       expect.objectContaining({
         method: "GET",
         headers: {
