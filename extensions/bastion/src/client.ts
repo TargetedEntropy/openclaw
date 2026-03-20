@@ -209,7 +209,7 @@ export async function bastionApiGetSelf(params: {
   token: string;
   signal?: AbortSignal;
 }): Promise<{ id: string; username: string }> {
-  const url = `${params.baseUrl}/api/v1/users/@me`;
+  const url = `${params.baseUrl}/api/v1/users/me`;
   const response = await fetch(url, {
     method: "GET",
     headers: buildHeaders(params.token),
