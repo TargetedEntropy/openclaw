@@ -87,6 +87,7 @@ export async function handleBastionInbound(params: {
   config: CoreConfig;
   runtime: RuntimeEnv;
   botUserId?: string;
+  botUsername?: string;
   sendReply?: (target: string, text: string) => Promise<void>;
   statusSink?: (patch: { lastInboundAt?: number; lastOutboundAt?: number }) => void;
 }): Promise<void> {
@@ -253,6 +254,29 @@ export async function handleBastionInbound(params: {
     return;
   }
 
+  // Mention gating for group messages.
+  const mentionRegexes = core.channel.mentions.buildMentionRegexes(config as OpenClawConfig);
+  const botName = params.botUsername?.trim();
+  const explicitMentionRegex = botName
+    ? new RegExp(`\\b${botName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i")
+    : null;
+  const wasMentioned =
+    core.channel.mentions.matchesMentionPatterns(rawBody, mentionRegexes) ||
+    (explicitMentionRegex ? explicitMentionRegex.test(rawBody) : false);
+
+  if (message.isGroup) {
+    const direct = groupMatch.groupConfig;
+    const wildcard = groupMatch.wildcardConfig;
+    const requireMention =
+      (direct as { requireMention?: boolean } | undefined)?.requireMention ??
+      (wildcard as { requireMention?: boolean } | undefined)?.requireMention ??
+      true;
+    if (requireMention && !wasMentioned && !hasControlCommand) {
+      runtime.log?.(`bastion: drop channel ${message.target} (not mentioned)`);
+      return;
+    }
+  }
+
   const peerId = message.isGroup ? message.channelId : message.senderId;
   const route = core.channel.routing.resolveAgentRoute({
     cfg: config as OpenClawConfig,
@@ -300,7 +324,7 @@ export async function handleBastionInbound(params: {
     GroupSystemPrompt: message.isGroup ? groupSystemPrompt : undefined,
     Provider: CHANNEL_ID,
     Surface: CHANNEL_ID,
-    WasMentioned: undefined,
+    WasMentioned: message.isGroup ? wasMentioned : undefined,
     MessageSid: message.messageId,
     Timestamp: message.timestamp,
     OriginatingChannel: CHANNEL_ID,
