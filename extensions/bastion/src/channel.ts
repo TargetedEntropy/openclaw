@@ -133,7 +133,17 @@ export const bastionPlugin: ChannelPlugin<ResolvedBastionAccount, BastionProbe> 
     collectWarnings: collectBastionSecurityWarnings,
   },
   groups: {
-    resolveRequireMention: () => false,
+    resolveRequireMention: ({ cfg, accountId, groupId }) => {
+      const account = resolveBastionAccount({ cfg: cfg as CoreConfig, accountId });
+      if (!groupId) {
+        return true;
+      }
+      const groups = account.config.groups;
+      const direct = groups?.[groupId];
+      const wildcard = groups?.["*"];
+      // Per-group override takes priority, then wildcard, then default true.
+      return direct?.requireMention ?? wildcard?.requireMention ?? true;
+    },
     resolveToolPolicy: ({ cfg, accountId, groupId }) => {
       const account = resolveBastionAccount({ cfg: cfg as CoreConfig, accountId });
       if (!groupId) {

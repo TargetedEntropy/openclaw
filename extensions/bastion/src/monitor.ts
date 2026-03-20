@@ -125,6 +125,7 @@ export async function monitorBastionProvider(
         config: cfg,
         runtime,
         botUserId,
+        botUsername,
         sendReply: async (target, text) => {
           await bastionApiSendMessage({
             baseUrl: account.baseUrl,
