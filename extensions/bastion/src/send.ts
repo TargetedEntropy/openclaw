@@ -1,5 +1,5 @@
 import { resolveBastionAccount } from "./accounts.js";
-import { bastionApiCreateDm, bastionApiSendMessage } from "./client.js";
+import { BastionApiError, bastionApiCreateDm, bastionApiSendMessage } from "./client.js";
 import { normalizeBastionMessagingTarget } from "./normalize.js";
 import { getBastionRuntime } from "./runtime.js";
 import type { CoreConfig } from "./types.js";
@@ -76,7 +76,7 @@ export async function sendMessageBastion(
     return { messageId: result.id, channelId: result.channelId };
   } catch (err) {
     // If channel send fails, try creating a DM channel to the user
-    if (String(err).includes("404") || String(err).includes("not found")) {
+    if (err instanceof BastionApiError && err.status === 404) {
       const dm = await bastionApiCreateDm({
         baseUrl: account.baseUrl,
         token: account.token,

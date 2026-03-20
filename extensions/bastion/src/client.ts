@@ -52,7 +52,7 @@ const RECONNECT_DELAY_MS = 5000;
 const PING_INTERVAL_MS = 30000;
 
 export function connectBastionWs(opts: BastionClientOptions): BastionClient {
-  const wsUrl = opts.baseUrl.replace(/^http/, "ws") + `/api/v1/ws?token=${opts.token}`;
+  const wsUrl = opts.baseUrl.replace(/^http/, "ws") + "/api/v1/ws";
   let ws: WebSocket | null = null;
   let ready = false;
   let pingInterval: ReturnType<typeof setInterval> | null = null;
@@ -75,7 +75,8 @@ export function connectBastionWs(opts: BastionClientOptions): BastionClient {
       return;
     }
 
-    ws = new WebSocket(wsUrl);
+    // Send credential via header instead of query string to avoid log exposure.
+    ws = new WebSocket(wsUrl, { headers: { Authorization: `Bot ${opts.token}` } });
 
     ws.on("open", () => {
       ready = true;
@@ -140,6 +141,14 @@ export function connectBastionWs(opts: BastionClientOptions): BastionClient {
 
 // REST API helpers for sending messages and managing channels.
 
+export class BastionApiError extends Error {
+  readonly status: number;
+  constructor(status: number, body: string) {
+    super(`Bastion API error ${status}: ${body}`);
+    this.status = status;
+  }
+}
+
 export type BastionSendPayload = {
   content: string;
 };
@@ -172,7 +181,7 @@ export async function bastionApiSendMessage(params: {
   });
   if (!response.ok) {
     const body = await response.text().catch(() => "");
-    throw new Error(`Bastion API error ${response.status}: ${body}`);
+    throw new BastionApiError(response.status, body);
   }
   return (await response.json()) as BastionSendResponse;
 }
@@ -190,7 +199,7 @@ export async function bastionApiCreateDm(params: {
   });
   if (!response.ok) {
     const body = await response.text().catch(() => "");
-    throw new Error(`Bastion DM creation error ${response.status}: ${body}`);
+    throw new BastionApiError(response.status, body);
   }
   return (await response.json()) as { id: string };
 }
@@ -198,15 +207,17 @@ export async function bastionApiCreateDm(params: {
 export async function bastionApiGetSelf(params: {
   baseUrl: string;
   token: string;
+  signal?: AbortSignal;
 }): Promise<{ id: string; username: string }> {
   const url = `${params.baseUrl}/api/v1/users/@me`;
   const response = await fetch(url, {
     method: "GET",
     headers: buildHeaders(params.token),
+    signal: params.signal,
   });
   if (!response.ok) {
     const body = await response.text().catch(() => "");
-    throw new Error(`Bastion API error ${response.status}: ${body}`);
+    throw new BastionApiError(response.status, body);
   }
   return (await response.json()) as { id: string; username: string };
 }

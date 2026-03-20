@@ -3,10 +3,10 @@ import { resolveBastionAccount } from "./accounts.js";
 import {
   connectBastionWs,
   bastionApiGetSelf,
+  bastionApiSendMessage,
   type BastionClient,
   type BastionMessageEvent,
 } from "./client.js";
-import { bastionApiSendMessage } from "./client.js";
 import { handleBastionInbound } from "./inbound.js";
 import type { RuntimeEnv } from "./runtime-api.js";
 import { getBastionRuntime } from "./runtime.js";

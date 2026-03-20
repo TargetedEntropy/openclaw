@@ -1,5 +1,10 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { bastionApiSendMessage, bastionApiGetSelf, bastionApiCreateDm } from "./client.js";
+import {
+  BastionApiError,
+  bastionApiSendMessage,
+  bastionApiGetSelf,
+  bastionApiCreateDm,
+} from "./client.js";
 
 describe("bastionApiSendMessage", () => {
   const originalFetch = globalThis.fetch;
@@ -55,7 +60,28 @@ describe("bastionApiSendMessage", () => {
         channelId: "ch-1",
         content: "hello",
       }),
-    ).rejects.toThrow("Bastion API error 403");
+    ).rejects.toThrow(BastionApiError);
+  });
+
+  it("includes status code on typed error", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+      text: async () => "Not Found",
+    });
+
+    try {
+      await bastionApiSendMessage({
+        baseUrl: "https://bastion.example.com",
+        token: "bot_test",
+        channelId: "ch-1",
+        content: "hello",
+      });
+      expect.unreachable("should have thrown");
+    } catch (err) {
+      expect(err).toBeInstanceOf(BastionApiError);
+      expect((err as BastionApiError).status).toBe(404);
+    }
   });
 });
 
