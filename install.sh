@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # OpenClaw Installer for macOS and Linux (TargetedEntropy fork)
-# Usage: curl -fsSL --proto '=https' --tlsv1.2 https://raw.githubusercontent.com/TargetedEntropy/openclaw/feat/bastion-channel/install.sh | bash
+# Usage: curl -fsSL --proto '=https' --tlsv1.2 https://raw.githubusercontent.com/TargetedEntropy/openclaw/main/install.sh | bash
 
 BOLD='\033[1m'
 ACCENT='\033[38;2;255;77;77m'       # coral-bright  #ff4d4d
@@ -1003,7 +1003,7 @@ print_usage() {
 OpenClaw installer (macOS + Linux)
 
 Usage:
-  curl -fsSL --proto '=https' --tlsv1.2 https://raw.githubusercontent.com/TargetedEntropy/openclaw/feat/bastion-channel/install.sh | bash -s -- [options]
+  curl -fsSL --proto '=https' --tlsv1.2 https://raw.githubusercontent.com/TargetedEntropy/openclaw/main/install.sh | bash -s -- [options]
 
 Options:
   --install-method, --method npm|git   Install via npm (default) or from a git checkout
@@ -1033,9 +1033,9 @@ Environment variables:
   SHARP_IGNORE_GLOBAL_LIBVIPS=0|1    Default: 1 (avoid sharp building against global libvips)
 
 Examples:
-  curl -fsSL --proto '=https' --tlsv1.2 https://raw.githubusercontent.com/TargetedEntropy/openclaw/feat/bastion-channel/install.sh | bash
-  curl -fsSL --proto '=https' --tlsv1.2 https://raw.githubusercontent.com/TargetedEntropy/openclaw/feat/bastion-channel/install.sh | bash -s -- --no-onboard
-  curl -fsSL --proto '=https' --tlsv1.2 https://raw.githubusercontent.com/TargetedEntropy/openclaw/feat/bastion-channel/install.sh | bash -s -- --install-method git --no-onboard
+  curl -fsSL --proto '=https' --tlsv1.2 https://raw.githubusercontent.com/TargetedEntropy/openclaw/main/install.sh | bash
+  curl -fsSL --proto '=https' --tlsv1.2 https://raw.githubusercontent.com/TargetedEntropy/openclaw/main/install.sh | bash -s -- --no-onboard
+  curl -fsSL --proto '=https' --tlsv1.2 https://raw.githubusercontent.com/TargetedEntropy/openclaw/main/install.sh | bash -s -- --install-method git --no-onboard
 EOF
 }
 
@@ -1223,7 +1223,7 @@ print_homebrew_admin_fix() {
     echo "  2) Ask an Administrator to grant admin rights, then sign out/in:"
     echo "     sudo dseditgroup -o edit -a ${current_user} -t user admin"
     echo "Then retry:"
-    echo "  curl -fsSL https://raw.githubusercontent.com/TargetedEntropy/openclaw/feat/bastion-channel/install.sh | bash"
+    echo "  curl -fsSL https://raw.githubusercontent.com/TargetedEntropy/openclaw/main/install.sh | bash"
 }
 
 install_homebrew() {
@@ -2027,7 +2027,7 @@ install_openclaw_from_git() {
     ensure_pnpm_binary_for_scripts
 
     if [[ ! -d "$repo_dir" ]]; then
-        run_quiet_step "Cloning OpenClaw" git clone -b feat/bastion-channel "$repo_url" "$repo_dir"
+        run_quiet_step "Cloning OpenClaw" git clone "$repo_url" "$repo_dir"
     fi
 
     if [[ "$GIT_UPDATE" == "1" ]]; then
@@ -2536,7 +2536,7 @@ main() {
         ui_kv "Checkout" "$final_git_dir"
         ui_kv "Wrapper" "$HOME/.local/bin/openclaw"
         ui_kv "Update command" "openclaw update --restart"
-        ui_kv "Switch to npm" "curl -fsSL --proto '=https' --tlsv1.2 https://raw.githubusercontent.com/TargetedEntropy/openclaw/feat/bastion-channel/install.sh | bash -s -- --install-method npm"
+        ui_kv "Switch to npm" "curl -fsSL --proto '=https' --tlsv1.2 https://raw.githubusercontent.com/TargetedEntropy/openclaw/main/install.sh | bash -s -- --install-method npm"
     elif [[ "$is_upgrade" == "true" ]]; then
         ui_info "Upgrade complete"
         if [[ -r /dev/tty && -w /dev/tty ]]; then
