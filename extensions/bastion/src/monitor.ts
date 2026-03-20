@@ -3,10 +3,10 @@ import { resolveBastionAccount } from "./accounts.js";
 import {
   connectBastionWs,
   bastionApiGetSelf,
+  bastionApiSendMessage,
   type BastionClient,
   type BastionMessageEvent,
 } from "./client.js";
-import { bastionApiSendMessage } from "./client.js";
 import { handleBastionInbound } from "./inbound.js";
 import type { RuntimeEnv } from "./runtime-api.js";
 import { getBastionRuntime } from "./runtime.js";
@@ -56,17 +56,15 @@ export async function monitorBastionProvider(
   });
 
   // Resolve the bot's own user ID so we can ignore self-messages.
-  let botUserId: string | undefined;
-  try {
-    const self = await bastionApiGetSelf({
-      baseUrl: account.baseUrl,
-      token: account.token,
-    });
-    botUserId = self.id;
-    logger.info(`[${account.accountId}] authenticated as ${self.username} (${self.id})`);
-  } catch (err) {
-    logger.error(`[${account.accountId}] failed to get bot identity: ${String(err)}`);
-  }
+  // This is mandatory — without it the bot will respond to its own output
+  // and loop indefinitely.
+  const self = await bastionApiGetSelf({
+    baseUrl: account.baseUrl,
+    token: account.token,
+  });
+  const botUserId = self.id;
+  const botUsername = self.username;
+  logger.info(`[${account.accountId}] authenticated as ${botUsername} (${botUserId})`);
 
   let client: BastionClient | null = null;
 
@@ -84,8 +82,11 @@ export async function monitorBastionProvider(
       logger.info(`[${account.accountId}] WebSocket closed, will reconnect`);
     },
     onMessage: async (event) => {
-      // Ignore messages from the bot itself.
-      if (botUserId && event.author.id === botUserId) {
+      // Ignore messages from the bot itself (by ID or username fallback).
+      if (event.author.id === botUserId) {
+        return;
+      }
+      if (botUsername && event.author.username === botUsername) {
         return;
       }
       // Ignore messages from other bots.

@@ -184,6 +184,28 @@ export async function handleBastionInbound(params: {
   });
   const commandAuthorized = commandGate.commandAuthorized;
 
+  // Enforce group sender allowlist: if allowlists are configured, reject
+  // non-allowlisted senders even for ordinary (non-command) messages.
+  if (message.isGroup && groupPolicy !== "open") {
+    const directGroupAllowFrom = normalizeBastionAllowlist(groupMatch.groupConfig?.allowFrom);
+    const wildcardGroupAllowFrom = normalizeBastionAllowlist(groupMatch.wildcardConfig?.allowFrom);
+    const innerGroupAllowFrom =
+      directGroupAllowFrom.length > 0 ? directGroupAllowFrom : wildcardGroupAllowFrom;
+    const outerOrInner =
+      innerGroupAllowFrom.length > 0 ? innerGroupAllowFrom : effectiveGroupAllowFrom;
+    if (outerOrInner.length > 0) {
+      const groupSenderAllowed = resolveBastionAllowlistMatch({
+        allowFrom: outerOrInner,
+        senderId: message.senderId,
+        senderName: message.senderName,
+      }).allowed;
+      if (!groupSenderAllowed) {
+        runtime.log?.(`bastion: drop group sender ${senderDisplay} (not in allowlist)`);
+        return;
+      }
+    }
+  }
+
   if (!message.isGroup) {
     if (dmPolicy === "disabled") {
       runtime.log?.(`bastion: drop DM sender=${senderDisplay} (dmPolicy=disabled)`);

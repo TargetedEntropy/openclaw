@@ -23,6 +23,7 @@ export async function probeBastion(
       const self = await bastionApiGetSelf({
         baseUrl: account.baseUrl,
         token: account.token,
+        signal: controller.signal,
       });
       const latencyMs = Date.now() - start;
       return {
