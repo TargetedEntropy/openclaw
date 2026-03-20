@@ -52,7 +52,8 @@ const RECONNECT_DELAY_MS = 5000;
 const PING_INTERVAL_MS = 30000;
 
 export function connectBastionWs(opts: BastionClientOptions): BastionClient {
-  const wsUrl = opts.baseUrl.replace(/^http/, "ws") + "/api/v1/ws";
+  // Bastion server requires token as a query parameter for WebSocket auth.
+  const wsUrl = opts.baseUrl.replace(/^http/, "ws") + `/api/v1/ws?token=${opts.token}`;
   let ws: WebSocket | null = null;
   let ready = false;
   let pingInterval: ReturnType<typeof setInterval> | null = null;
@@ -75,8 +76,7 @@ export function connectBastionWs(opts: BastionClientOptions): BastionClient {
       return;
     }
 
-    // Send credential via header instead of query string to avoid log exposure.
-    ws = new WebSocket(wsUrl, { headers: { Authorization: `Bot ${opts.token}` } });
+    ws = new WebSocket(wsUrl);
 
     ws.on("open", () => {
       ready = true;
