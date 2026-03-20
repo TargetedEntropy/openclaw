@@ -1,3 +1,4 @@
+import { bastionPlugin } from "../../../extensions/bastion/index.js";
 import { bluebubblesPlugin } from "../../../extensions/bluebubbles/index.js";
 import { discordPlugin, setDiscordRuntime } from "../../../extensions/discord/index.js";
 import { discordSetupPlugin } from "../../../extensions/discord/setup-entry.js";
@@ -20,6 +21,7 @@ import { zaloPlugin } from "../../../extensions/zalo/index.js";
 import type { ChannelId, ChannelPlugin } from "./types.js";
 
 export const bundledChannelPlugins = [
+  bastionPlugin,
   bluebubblesPlugin,
   discordPlugin,
   feishuPlugin,
@@ -38,6 +40,7 @@ export const bundledChannelPlugins = [
 export const bundledChannelSetupPlugins = [
   telegramSetupPlugin,
   discordSetupPlugin,
+  bastionPlugin,
   ircPlugin,
   slackSetupPlugin,
   signalSetupPlugin,

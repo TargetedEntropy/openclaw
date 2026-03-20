@@ -5,6 +5,7 @@ export const CHAT_CHANNEL_ORDER = [
   "telegram",
   "whatsapp",
   "discord",
+  "bastion",
   "irc",
   "googlechat",
   "slack",

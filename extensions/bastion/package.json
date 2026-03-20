@@ -1,0 +1,26 @@
+{
+  "name": "@openclaw/bastion",
+  "version": "2026.3.14",
+  "description": "OpenClaw Bastion channel plugin",
+  "type": "module",
+  "dependencies": {
+    "ws": "^8.18.0",
+    "zod": "^4.3.6"
+  },
+  "openclaw": {
+    "extensions": [
+      "./index.ts"
+    ],
+    "setupEntry": "./setup-entry.ts",
+    "channel": {
+      "id": "bastion",
+      "label": "Bastion",
+      "selectionLabel": "Bastion (Bot API)",
+      "detailLabel": "Bastion Bot",
+      "docsPath": "/channels/bastion",
+      "docsLabel": "bastion",
+      "blurb": "self-hosted Bastion chat with bot token + WebSocket.",
+      "systemImage": "shield"
+    }
+  }
+}
