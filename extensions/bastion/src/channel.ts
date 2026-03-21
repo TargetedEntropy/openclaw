@@ -154,6 +154,11 @@ export const bastionPlugin: ChannelPlugin<ResolvedBastionAccount, BastionProbe> 
       return groupConfig?.tools;
     },
   },
+  execApprovals: {
+    // Mark Bastion as exec-approval-capable so the system routes approval
+    // prompts as text messages instead of rejecting with "not supported".
+    getInitiatingSurfaceState: () => ({ kind: "enabled" }),
+  },
   messaging: {
     normalizeTarget: (raw: string) => normalizeBastionMessagingTarget(raw) ?? undefined,
     targetResolver: {

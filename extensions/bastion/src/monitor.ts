@@ -126,6 +126,7 @@ export async function monitorBastionProvider(
         runtime,
         botUserId,
         botUsername,
+        sendTyping: (channelId) => client?.sendTyping(channelId),
         sendReply: async (target, text) => {
           await bastionApiSendMessage({
             baseUrl: account.baseUrl,
