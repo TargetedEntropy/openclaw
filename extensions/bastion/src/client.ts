@@ -45,6 +45,8 @@ export type BastionClientOptions = {
 export type BastionClient = {
   isReady(): boolean;
   close(): void;
+  sendTyping(channelId: string): void;
+  sendPresence(status: string): void;
   ws: WebSocket | null;
 };
 
@@ -80,6 +82,10 @@ export function connectBastionWs(opts: BastionClientOptions): BastionClient {
 
     ws.on("open", () => {
       ready = true;
+      // Announce online presence on connect.
+      if (ws?.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: "PRESENCE_UPDATE", data: { status: "online" } }));
+      }
       pingInterval = setInterval(() => {
         if (ws?.readyState === WebSocket.OPEN) {
           ws.ping();
@@ -132,6 +138,16 @@ export function connectBastionWs(opts: BastionClientOptions): BastionClient {
       cleanup();
       ws?.close();
       ws = null;
+    },
+    sendTyping: (channelId: string) => {
+      if (ws?.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: "TYPING_START", data: { channelId } }));
+      }
+    },
+    sendPresence: (status: string) => {
+      if (ws?.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: "PRESENCE_UPDATE", data: { status } }));
+      }
     },
     get ws() {
       return ws;

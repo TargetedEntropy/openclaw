@@ -3,8 +3,9 @@ import { normalizeBastionAllowlist, resolveBastionAllowlistMatch } from "./norma
 import {
   GROUP_POLICY_BLOCKED_LABEL,
   createChannelPairingController,
+  createChannelReplyPipeline,
+  createNormalizedOutboundDeliverer,
   deliverFormattedTextWithAttachments,
-  dispatchInboundReplyWithBase,
   logInboundDrop,
   readStoreAllowFromForDmPolicy,
   resolveControlCommandGate,
@@ -89,6 +90,7 @@ export async function handleBastionInbound(params: {
   botUserId?: string;
   botUsername?: string;
   sendReply?: (target: string, text: string) => Promise<void>;
+  sendTyping?: (channelId: string) => void;
   statusSink?: (patch: { lastInboundAt?: number; lastOutboundAt?: number }) => void;
 }): Promise<void> {
   const { message, account, config, runtime, statusSink } = params;
@@ -332,28 +334,54 @@ export async function handleBastionInbound(params: {
     CommandAuthorized: commandAuthorized,
   });
 
-  await dispatchInboundReplyWithBase({
-    cfg: config as OpenClawConfig,
-    channel: CHANNEL_ID,
-    accountId: account.accountId,
-    route,
+  // Record inbound session.
+  await core.channel.session.recordInboundSession({
     storePath,
-    ctxPayload,
-    core,
-    deliver: async (payload) => {
-      await deliverBastionReply({
-        payload,
-        target: message.channelId,
-        accountId: account.accountId,
-        sendReply: params.sendReply,
-        statusSink,
-      });
-    },
+    sessionKey: ctxPayload.SessionKey ?? route.sessionKey,
+    ctx: ctxPayload,
     onRecordError: (err) => {
       runtime.error?.(`bastion: failed updating session meta: ${String(err)}`);
     },
-    onDispatchError: (err, info) => {
-      runtime.error?.(`bastion ${info.kind} reply failed: ${String(err)}`);
+  });
+
+  // Build reply pipeline with typing support.
+  const typingTarget = message.channelId;
+  const { onModelSelected, ...replyPipeline } = createChannelReplyPipeline({
+    cfg: config as OpenClawConfig,
+    agentId: route.agentId,
+    channel: CHANNEL_ID,
+    accountId: account.accountId,
+    typing: params.sendTyping
+      ? {
+          start: async () => {
+            params.sendTyping!(typingTarget);
+          },
+          onStartError: (err) => {
+            runtime.error?.(`bastion: typing indicator failed: ${String(err)}`);
+          },
+        }
+      : undefined,
+  });
+
+  const deliver = createNormalizedOutboundDeliverer(async (payload) => {
+    await deliverBastionReply({
+      payload,
+      target: message.channelId,
+      accountId: account.accountId,
+      sendReply: params.sendReply,
+      statusSink,
+    });
+  });
+
+  await core.channel.reply.dispatchReplyWithBufferedBlockDispatcher({
+    ctx: ctxPayload,
+    cfg: config as OpenClawConfig,
+    dispatcherOptions: {
+      ...replyPipeline,
+      deliver,
+      onError: (err, info) => {
+        runtime.error?.(`bastion ${info.kind} reply failed: ${String(err)}`);
+      },
     },
     replyOptions: {
       skillFilter: groupMatch.groupConfig?.skills,
@@ -361,6 +389,7 @@ export async function handleBastionInbound(params: {
         typeof account.config.blockStreaming === "boolean"
           ? !account.config.blockStreaming
           : undefined,
+      onModelSelected,
     },
   });
 }
