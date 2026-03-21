@@ -174,18 +174,22 @@ export async function handleBastionInbound(params: {
     senderName: message.senderName,
   }).allowed;
   const hasControlCommand = core.channel.text.hasControlCommand(rawBody, config as OpenClawConfig);
+  const relevantAllowFrom = message.isGroup ? effectiveGroupAllowFrom : effectiveAllowFrom;
   const commandGate = resolveControlCommandGate({
     useAccessGroups,
     authorizers: [
       {
-        configured: (message.isGroup ? effectiveGroupAllowFrom : effectiveAllowFrom).length > 0,
+        configured: relevantAllowFrom.length > 0,
         allowed: senderAllowed,
       },
     ],
     allowTextCommands,
     hasControlCommand,
+    // When no allowlist is configured, allow commands (open-by-default).
+    modeWhenAccessGroupsOff: "configured",
   });
-  const commandAuthorized = commandGate.commandAuthorized;
+  // If no allowlist is configured at all, authorize commands for any sender.
+  const commandAuthorized = relevantAllowFrom.length === 0 ? true : commandGate.commandAuthorized;
 
   // Enforce group sender allowlist: if allowlists are configured, reject
   // non-allowlisted senders even for ordinary (non-command) messages.
